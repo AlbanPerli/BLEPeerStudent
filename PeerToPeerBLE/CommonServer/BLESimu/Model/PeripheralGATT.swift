@@ -39,7 +39,9 @@ public struct PeripheralGatt {
     
     func buildCoreBluetoothCharacteristic(_ characteristic:Characteristic) -> CBMutableCharacteristic {
         
-        let properties = CBCharacteristicProperties(characteristic.properties.map{ CBCharacteristicProperties(rawValue: UInt($0)) })
+        
+        let properties = CBCharacteristicProperties(arrayLiteral: .notify,.write,.read)// CBCharacteristicProperties(characteristic.properties.map{ CBCharacteristicProperties(rawValue: UInt($0)) })
+        
         let permissions = CBAttributePermissions(characteristic.permissions.map{ CBAttributePermissions(rawValue: UInt($0)) })
         
         return CBMutableCharacteristic(type: CBUUID(string: characteristic.uuid), properties: properties, value: nil, permissions: permissions)

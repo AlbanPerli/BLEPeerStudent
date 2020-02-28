@@ -25,21 +25,32 @@ class BLEManager: NSObject {
     var didFinishDiscoveryCallback: ((CBPeripheral) -> ())?
     var globalDisconnectCallback: ((CBPeripheral) -> ())?
     var sendDataCallback: ((String?) -> ())?
+    var messageReceivedCallback:((Data?)->())?
     
     override init() {
         super.init()
         centralManager = CBCentralManager(delegate: self, queue: nil)
     }
     
+    func clear() {
+        connectedPeripherals = []
+        readyPeripherals = []
+    }
+    
     func scan(callback: @escaping (CBPeripheral) -> ()) {
         isScanning = true
         scanCallback = callback
-        centralManager?.scanForPeripherals(withServices: nil, options: nil)
+        let s = CBUUID(string: "EE25B7B6-7798-4749-8B12-734CFBC5CAA9")
+        centralManager?.scanForPeripherals(withServices: [s], options: nil)
     }
     
     func stopScan() {
         isScanning = false
         centralManager?.stopScan()
+    }
+    
+    func listenForMessages(callback:@escaping(Data?)->()) {
+        messageReceivedCallback = callback
     }
     
     func connectPeripheral(_ periph: CBPeripheral, callback: @escaping (CBPeripheral) -> ()) {
@@ -103,6 +114,11 @@ extension BLEManager: CBPeripheralDelegate {
         if let services = peripheral.services {
             let count = services.filter { $0.characteristics == nil }.count
             if count == 0 {
+                for s in services {
+                    for c in s.characteristics! {
+                            peripheral.setNotifyValue(true, for: c)
+                    }
+                }
                 readyPeripherals.append(peripheral)
                 didFinishDiscoveryCallback?(peripheral)
             }
@@ -137,7 +153,8 @@ extension BLEManager: CBCentralManagerDelegate {
     }
     
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
-        print(characteristic.value)
+        print("UPDATE!!!")
+        messageReceivedCallback?(characteristic.value)
     }
     
     func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {

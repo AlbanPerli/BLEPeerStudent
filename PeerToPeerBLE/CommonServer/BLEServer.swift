@@ -7,12 +7,13 @@
 //
 
 import Foundation
+import CoreBluetooth
 
 class BLEServer {
     static let instance = BLEServer()
     
     private var periphGatt:PeripheralGatt!
-    private var periph:PeripheralController?
+    var periph:PeripheralController?
     private var serverName:String = ""
     
     var stateCallback:((PeripheralState)->())? = nil
@@ -28,6 +29,13 @@ class BLEServer {
             if let data = event.message {
                 callback(data)
             }
+        }
+    }
+    
+    func sendMessage(data:Data) {
+        if let p = self.periph,
+            let char = BLEServer.instance.periph!.notifyingChars.first {
+            p.peripheral.updateValue(data, for: char as! CBMutableCharacteristic, onSubscribedCentrals: nil)
         }
     }
     

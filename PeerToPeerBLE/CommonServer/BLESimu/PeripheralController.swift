@@ -2,6 +2,7 @@ import CoreBluetooth
 
 public class PeripheralController: NSObject, CBPeripheralManagerDelegate {
     
+    var notifyingChars = [CBCharacteristic]()
     var peripheralState = PeripheralState.defaultState()
     var stateCallBack:((PeripheralState)->())?
     
@@ -126,6 +127,11 @@ public class PeripheralController: NSObject, CBPeripheralManagerDelegate {
         serviceControllers
             .first(where: { $0.service.uuid == serviceUUID })
             .map { $0.handleSubscribeToCharacteristic(characteristic: characteristic, on: peripheral) }
+        
+        // All char notifying...
+        notifyingChars.append(characteristic)
+        
     }
+    
 }
 
